@@ -1,0 +1,369 @@
+.upper .active-tab{
+    border-bottom: 4px solid #ffcf37;
+    padding-top: 4px;
+    color: #ffcf37;
+    text-decoration: none;
+}
+
+
+.first_btn{display:block;}
+.last_btn{display:none !important;}
+@media (max-width: 575.98px)
+{
+body .default-label-str{width:100%;}
+body .default-label-str_100{width:100%;}
+body .first_btn{display:none;}
+body .last_btn{display:block !important;}
+body .l-inline{    width: 100%;}
+}
+
+
+.l-inline{
+    display: -webkit-inline-box;
+    width: 42%;
+    margin-right: 15px;
+}
+.default-label-str{
+display:inline-block;
+width: 42%;
+margin-right: 10px;
+}
+.default-label-str input{
+display:inline-block;
+width: 100%
+}
+.default-label-str_100{
+    width: calc(84% + 14px);
+}
+body .default-label-str_100 input{
+width: 100%;
+}
+.form-str{
+margin-top:40px;
+width: 100%;
+max-width: 800px;
+}
+
+.circle_img{
+    width: 40px;
+}
+
+body .btn_RS{
+    margin-right: auto;
+    margin-left: auto;
+    width: 285px;
+    margin-top: 20px;
+}
+body .RS_lg{
+    width: 285px;
+    -webkit-box-flex: 0;
+    -webkit-flex: 0 0 100%;
+    -ms-flex: 0 0 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+
+@media (min-width: 1125px){
+body .header-top-menu{
+flex: 0 0 830px;
+max-width: 830px;
+}
+}
+@media (max-width: 1125px) and (min-width: 992px) {
+body .header-top-menu{
+flex: 0 0 700px;
+max-width: 700px;
+}
+}
+
+
+.clear_both{
+    clear: both;
+    width: 100%;
+    height: 1px;
+}
+@media (min-width: 1125px){
+	body .selAdr .popup-main-default .default-label-select {
+		width: 288px;
+	}
+}
+body .selAdr.popup-main-delivery-flex {
+    -webkit-justify-content: left;
+    justify-content: left;
+}
+.selAdr .default-label {
+    margin-right: 10px;
+}
+
+
+
+
+
+@media (max-width: 575.98px){
+	.default-path ul li {white-space: normal;}
+	h2 {font-size: 32px;}
+}
+
+body .selecter-options {
+    width: auto;
+}
+
+body .cat_title{
+    overflow: hidden;
+    max-height: 4.5em;
+}
+
+
+
+ body .sl_title{
+	overflow: hidden;
+	max-height: 4em;
+}
+@media screen and (max-width: 575px) {
+body .sl_title{
+	overflow: hidden;
+	max-height: 2.5em;
+}
+
+}
+
+
+
+body .defaul_n {
+    width: 100%;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-bottom: 0px;
+ //   padding-left: 25%;
+  //  padding-right: 25%;
+    flex: 0 0 288px;
+}
+/*
+@media (max-width: 585px){
+
+	body .defaul_n {
+    flex: 0 0 100% !important;
+	}
+}
+*/
+
+	body .defaul_n {
+    flex: 0 0 100% !important;
+	}
+
+@media (max-width: 575.98px)
+{
+	body .defaul_n {
+	padding-left: 0px;
+	padding-right: 0px;
+//	width: 100%;
+  flex: 0 0 100% !important;
+	}
+}
+@media (max-width: 674px)
+{
+	body .selAdr .default-label {
+  		flex: 0 0 100% !important;
+		margin-right: 0px;
+	}
+
+
+}
+
+
+
+
+
+	.cart-main-bot-left-btns{
+    display: inline-block;
+    margin-left: 15%;
+}
+	.cart-main-bot-left-btns_dec .line_tr{    text-decoration: line-through;}
+
+.coupoN{
+    text-align: center;
+    margin-top: 5%;
+    font-weight: 700;
+    color: green;
+}
+.coupon_g{
+    text-align: center;
+    margin-top: 5%;
+    font-weight: 700;
+    color: green;
+
+}
+.coupon_b{
+    text-align: center;
+    margin-top: 5%;
+    font-weight: 700;
+    color: red;
+
+}
+
+
+
+body .zaglushka{
+	-webkit-box-flex: 0;
+    -webkit-flex: 0 0 471px;
+    -ms-flex: 0 0 471px;
+    flex: 0 0 471px;
+    width: 471px;
+    padding: 27px 38px;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    height: 156px;
+}
+.header-cart{box-shadow: 0 0px 50px rgba(0,0,0,0.1);}
+.default-shop-item:hover .btn_hover_svg svg{display:none;}
+body .responsive_height{height: 55px;}
+
+.select_address{    padding: 0;
+    display: inline-block;
+    font-weight: 700;
+    color: #444e93;
+    border-bottom: 1px dashed #444e93;
+    cursor: pointer;
+}
+
+.soglasie{
+    color: red;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: none;
+}
+
+
+.error_inp_email{
+    color: red;
+    font-size: 16px;
+    font-weight: 700;
+    display: none;
+}
+.error_inp_contacts{
+    color: red;
+    font-size: 16px;
+    font-weight: 700;
+    display: none;
+}
+
+.link_autorize{
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+
+    text-align: center;
+    color: #444e93;
+    border-bottom: 1px dashed #444e93;
+    margin-left: auto;
+    margin-right: auto;
+    width: 120px;
+}
+
+
+.user_login{
+    margin: auto;
+    width: 50%;
+    position: absolute;
+    left: 50%;
+    margin-left: -25%;
+    position: absolute;
+    top: 5%;
+	color:red;
+}
+
+.required_form1{
+	margin-top: 20px;
+    display: none;
+    color: red;
+    font-weight: 600;
+    font-size: 14px;
+	}
+
+.btn_profile{
+    background: #ffcf37;
+    line-height: 58px;
+    display: block;
+    -webkit-border-radius: 29px;
+    border-radius: 29px;
+    position: relative;
+    z-index: 3;
+    border: 0px solid;
+    font-weight: 800;
+	cursor:pointer;
+}
+.btn_profile:hover{opacity: 0.6;}
+.kol_max{
+	display:none;
+    font-size: 14px;
+    color: red;
+	font-weight: bold;
+	padding-left: 15%;
+}
+
+.inp_form_reviews_error{
+    color: red;
+    font-size: 14px;
+    font-weight: bold;
+    display: none;
+}
+
+.link_forgot{
+    margin-top: 5px;
+    font-size: 18px;
+    font-weight: 700;
+
+    text-align: center;
+    color: #444e93;
+    border-bottom: 1px dashed #444e93;
+    margin-left: auto;
+    margin-right: auto;
+    width: 180px;
+}
+
+
+.inp_form_register_error{
+	font-size: 13px;
+    color: red;
+    font-weight: bold;
+    display: none;
+}
+.link_register{
+	margin-top: 20px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+
+    text-align: center;
+    color: #444e93;
+    border-bottom: 1px dashed #444e93;
+    margin-left: auto;
+    margin-right: auto;
+    width: 120px;
+}
+
+body .popup_auth{height: 460px;}
+.inp_form_coop_error{
+    color: red;
+    font-size: 16px;
+    font-weight: bold;
+	display:none;
+    margin-bottom: 10px;
+}
+.inp_form_coop_error {
+
+
+
+.inp_form_quick_order_error{
+    color: red;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+	display:none;
+    margin-top: 15px;
+}

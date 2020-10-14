@@ -1,0 +1,598 @@
+var frameBackground,
+  frameWrapper,
+  frame,
+  widgetWrapper,
+  widgetButton,
+  widgetButtonProductCounter,
+  widgetButtonCounterWrapper,
+  animatedClass = 'animated',
+  showClass,
+  hideClass,
+  highestZIndex,
+  preview = {
+    elm: null,
+    loginButton: null,
+    processButtons: null,
+    crawlBtn: null,
+    uploadBtn: null,
+    issuesLink: null,
+    taskCounter: null,
+    providerInfo: null,
+    userInfo: null,
+    expiration: null,
+    statLink: null
+  },
+  bodyOwerflowRule,
+  crawlProgress = {
+    elm: null,
+    from: null,
+    to: null
+  },
+  uploadProgress = {
+    elm: null,
+    from: null,
+    to: null
+  },
+  userAuthorized = false;
+
+var testMode = document.location.hostname === 'localhost';
+var vzWidgetIsInitialized = false;
+
+var vzPostTarget = testMode ? '*' : 'https://vzakupke.com';
+
+function declOfNum(number, titles) {
+  cases = [2, 0, 1, 1, 1, 2];
+  return number + titles[ (number%100>4 && number%100<20)? 2 : cases[(number%10<5)?number%10:5] ];
+}
+
+function messageListener(e){
+  var message = e.data;
+  var messageType = message.type;
+
+  if (!messageType) return;
+
+  console && console.info('Catch message on site: "' + messageType + '" from widget: ', message);
+
+  switch (messageType){
+    case 'widget_init_finished':
+      sendMessage({type: 'widget_setup_site', url: testMode ? 'http://gepur.ru' : document.location.origin});
+      sendAskProductsCounter();
+      break;
+
+    case 'widget_user_authorized':
+      onAuthorized();
+      break;
+
+    case 'widget_user_unauthorized':
+      onUnauthorized();
+      break;
+
+    case 'widget_user_is_provider':
+      onUserIsProvider(message.expiration, message.statLink);
+      break;
+
+    case 'widget_sizes_updated':
+      preview.crawlBtn.disabled = false;
+      updateSizesProgress(message.sizes, message.statuses);
+      break;
+
+    case 'widget_products_counter_updated':
+      showProductsCounter(message.counter);
+      break;
+
+    case 'widget_close':
+      closeFrame();
+      break;
+  }
+}
+
+function getWidgetScript(){
+  var script = null;
+  var allElements = document.getElementsByTagName('script');
+  for (var i = 0, n = allElements.length; i < n; i++){
+    if (allElements[i].getAttribute('src') && allElements[i].getAttribute('src').indexOf('initSiteWidget.js') > 0){
+      script = allElements[i];
+      break;
+    }
+  }
+  return script;
+}
+
+function sendReaskProductsMessage(){
+  sendMessage({
+    type: 'widget_reask_products'
+  });
+}
+
+function sendReaskIssuesMessage(){
+  sendMessage({
+    type: 'widget_reask_issues'
+  });
+}
+
+function sendGoToUploadPageMessage(){
+  sendMessage({
+    type: 'to_upload_page'
+  });
+}
+
+function sendGoToLoginPageMessage(){
+  sendMessage({
+    type: 'to_login_page'
+  });
+}
+
+function sendGoToIssuesPageMessage(){
+  sendMessage({
+    type: 'to_issues_page'
+  });
+}
+
+function sendGoToInstructionPageMessage(){
+  sendMessage({
+    type: 'to_instruction_page'
+  });
+}
+
+function sendCrawlMessage(url, html, cookie){
+  preview.crawlBtn.disabled = true;
+  disableUploadBtn();
+  sendMessage({
+    type: 'widget_catch_crawl',
+    url: url,
+    html: html,
+    cookies: cookie,
+    userAgent: navigator.userAgent
+  });
+}
+
+function sendAskProductsCounter(){
+  sendMessage({
+    type: 'widget_ask_products_counter',
+    url: testMode ? 'http://gepur.ru/catalog/platya' : document.location.href,
+    html: document.documentElement.innerHTML
+  });
+}
+
+if (window.addEventListener) {
+  window.addEventListener("message", messageListener);
+  window.addEventListener('popstate', function(e){
+    console.error('popstate', e);
+  }, false);
+} else {
+  // IE8
+  window.attachEvent("onmessage", messageListener);
+}
+
+function onAuthorized(){
+  userAuthorized = true;
+  preview.processButtons.style.display = 'block';
+  preview.loginButton.style.display = 'none';
+  closeFrame();
+}
+
+function onUnauthorized(){
+  userAuthorized = false;
+  preview.processButtons.style.display = 'none';
+  preview.loginButton.style.display = 'block';
+}
+
+function onUserIsProvider(exp, statLink){
+  preview.expiration.innerHTML= (new Date(exp)).toLocaleDateString('ru-RU');
+  preview.statLink = statLink;
+  preview.providerInfo.style.display = 'block';
+  preview.userInfo.style.display = 'none';
+}
+
+function showProductsCounter(counter){
+  widgetButtonCounterWrapper.innerHTML = '<b>' + counter + '</b>';
+  widgetButtonProductCounter.classList.add('animated');
+  widgetButtonProductCounter.classList.add('zoomIn');
+  setTimeout(function(){
+    widgetButtonProductCounter.style.display = 'block';
+  }, 10);
+}
+
+function openFrame(){
+  setTimeout(function(){
+    frameBackground.style.display = 'block';
+    bodyOwerflowRule = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }, 100);
+}
+
+function closeFrame(){
+  frameBackground.style.display = 'none';
+  document.body.style.overflow = bodyOwerflowRule;
+  bodyOwerflowRule = null;
+  if (frame.src.indexOf('#/providers') > 0) frame.src = testMode ? 'http://localhost:3000' : 'https://vzakupke.com/widget/?t=' + Math.random();
+}
+
+function initFrame(){
+  frame = document.createElement('iframe');
+  frame.id = 'vz-iframe';
+  frame.src = testMode ? 'http://localhost:3000' : 'https://vzakupke.com/widget/?t=' + Math.random();
+
+  frameWrapper = document.createElement('div');
+  frameWrapper.id = 'vz-iframe-wrapper';
+  setFrameSize();
+
+  var closeBtn = document.createElement('div');
+  closeBtn.style.position = 'absolute';
+  closeBtn.style.top = 0;
+  closeBtn.style.right = '10px';
+  closeBtn.style.fontSize = '40px';
+  closeBtn.style.color = 'white';
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.innerHTML = '&times';
+
+  frameBackground = document.createElement('div');
+  frameBackground.style.zIndex = 9999999;
+  frameBackground.style.width = '100%';
+  frameBackground.style.height = '100%';
+  frameBackground.style.background = 'rgba(0, 0, 0, 0.5)';
+  frameBackground.style.position = 'fixed';
+  frameBackground.style.top = 0;
+  frameBackground.style.left = 0;
+  frameBackground.style.display = 'none';
+  frameBackground.onclick = function(){
+    closeFrame();
+  }
+
+
+  frameWrapper.appendChild(frame);
+  frameBackground.appendChild(closeBtn);
+  frameBackground.appendChild(frameWrapper);
+  document.body.appendChild(frameBackground);
+
+  window.setInterval(setupHighestZIndex, 60*1000);
+}
+
+function setFrameSize(){
+  frameWrapper.style.width = (window.innerWidth - 100) + 'px';
+  frameWrapper.style.height = (window.innerHeight - 100) + 'px';
+}
+
+function sendMessage(data){
+  frame.contentWindow.postMessage(data, vzPostTarget);
+}
+
+window.onresize = function(){
+  if (!frameWrapper) return;
+
+  setFrameSize();
+};
+
+function togglePreview(){
+  if (!preview.elm.classList.contains(animatedClass)) preview.elm.classList.add(animatedClass);
+  if (preview.elm.classList.contains(showClass)){
+    hidePreview();
+  } else {
+    showPreview();
+  }
+}
+
+function showPreview(){
+  preview.elm.classList.remove(hideClass);
+  preview.elm.classList.add(showClass);
+  setTimeout(function(){
+    preview.elm.style.display = 'block';
+  }, 10);
+}
+
+function hidePreview(){
+  preview.elm.classList.remove(showClass);
+  preview.elm.classList.add(hideClass);
+  setTimeout(function(){
+    preview.elm.style.display = 'none';
+  }, 10);
+}
+
+function disableUploadBtn(){
+  preview.uploadBtn.disabled = true;
+  preview.uploadBtn.title = 'Выкладка станет доступна после того, как будут получены товары';
+}
+
+function enableUploadBtn(){
+  preview.uploadBtn.disabled = false;
+  preview.uploadBtn.title = 'Выложить или экспортировать полученные товары';
+}
+
+function changeProgress(elm, from, to, status, statuses, onProgress, onFinished){
+  var progressClassName = 'label-info';
+  var finishedClassName = 'label-success';
+  var errorClassName = 'label-danger';
+
+  elm.elm.style.display = 'inline';
+  if (status === statuses.PROCESS){
+    elm.elm.classList.add(progressClassName);
+    elm.elm.classList.remove(finishedClassName, errorClassName);
+    onProgress && onProgress();
+  } else if (status === statuses.ERROR){
+    elm.elm.classList.add(errorClassName);
+    elm.elm.classList.remove(progressClassName, finishedClassName);
+  } else {
+    elm.elm.classList.add(finishedClassName);
+    elm.elm.classList.remove(progressClassName, errorClassName);
+    if (to === 0) elm.elm.style.display = 'none';
+    onFinished && onFinished();
+  }
+  elm.from.textContent = from;
+  elm.to.textContent = to;
+}
+
+function updateCrawlProgress(from, to, error, status, statuses){
+  changeProgress(crawlProgress, from, to ? to + error : error, status, statuses, function(){
+    disableUploadBtn();
+  }, function(){
+    if (to){
+      enableUploadBtn();
+    } else {
+      disableUploadBtn();
+    }
+  });
+}
+
+function updateUploadProgress(from, to, error, status, statuses){
+  changeProgress(uploadProgress, from, to ? to + error : error, status, statuses);
+}
+
+function updateTaskCount(cnt){
+  preview.issuesLink.style.display = 'block';
+  preview.taskCounter.textContent = declOfNum(cnt, [' активная задача', ' активные задачи', ' активных задач']);
+}
+
+function updateSizesProgress(sizes, statuses){
+  updateCrawlProgress(sizes.crawling.finished, sizes.crawling.size, sizes.crawling.error, sizes.crawling.status, statuses);
+  updateUploadProgress(sizes.upload.finished, sizes.upload.size, sizes.upload.error, sizes.upload.status, statuses);
+  updateTaskCount(sizes.issues.progress);
+}
+
+function widgetLogin(){
+  sendGoToLoginPageMessage();
+  openFrame();
+}
+
+function crawl(){
+  sendCrawlMessage(testMode ? 'http://gepur.ru/catalog/platya' : document.location.href, document.documentElement.innerHTML, document.cookie);
+}
+
+function openIssues(){
+  sendGoToIssuesPageMessage();
+  sendReaskIssuesMessage();
+  openFrame();
+}
+
+function openInstruction(){
+  sendGoToInstructionPageMessage();
+  openFrame();
+}
+
+function openStore(){
+  sendGoToUploadPageMessage();
+  sendReaskProductsMessage();
+  openFrame();
+}
+
+function openStat(){
+  frame.src = preview.statLink;
+  openFrame();
+}
+
+function initBtn(){
+  widgetButton = document.createElement('div');
+  widgetButton.id = 'vz-widget-btn';
+  widgetButton.onclick = togglePreview;
+  widgetButton.innerHTML = '<div id="product-counter" class="" title="Доступно товаров на этой странице"><div id="counter-wrapper" class="text-center"></div></div><div class="text-wrapper text-center">Выложить каталог</div>';
+  widgetButton.classList.add('animated', 'fadeIn');
+  widgetWrapper.appendChild(widgetButton);
+  widgetButtonProductCounter = widgetButton.querySelector('#product-counter');
+  widgetButtonCounterWrapper = widgetButton.querySelector('#counter-wrapper');
+}
+
+function appendWidgetCss(){
+  var fileref = document.createElement("link");
+  fileref.setAttribute("rel", "stylesheet");
+  fileref.setAttribute("type", "text/css");
+  fileref.setAttribute("href", testMode ? '/assets/css/widget.css' : 'https://vzakupke.com/widget/assets/css/widget.css');
+  document.getElementsByTagName("head")[0].appendChild(fileref);
+
+  fileref = document.createElement("link");
+  fileref.setAttribute("rel", "stylesheet");
+  fileref.setAttribute("type", "text/css");
+  fileref.setAttribute("href", testMode ? '/assets/css/font-awesome.min.css' : 'https://vzakupke.com/widget/assets/css/font-awesome.min.css');
+  document.getElementsByTagName("head")[0].appendChild(fileref)
+}
+
+function findHighestZIndex(elem){
+  var elems = document.getElementsByTagName(elem);
+  var highest = 0;
+  for (var i = 0; i < elems.length; i++){
+    if (!elems[i].id.startsWith('vz-')){
+      var zindex=document.defaultView.getComputedStyle(elems[i], null).getPropertyValue("z-index");
+      if ((zindex > highest) && (zindex != 'auto')){
+        highest = zindex;
+      }
+    }
+  }
+  return highest;
+}
+
+function initWrapper(){
+  var position;
+  var widgetScript = getWidgetScript();
+  widgetWrapper = document.getElementById('vz-widget-wrapper');
+  if (widgetWrapper){
+    position = widgetWrapper.getAttribute('class');
+    widgetWrapper.remove();
+  }
+
+  widgetWrapper = document.createElement("div");
+  widgetWrapper.id = "vz-widget-wrapper";
+  widgetWrapper.classList.add(position || widgetScript.getAttribute('position') || 'right');
+  document.body.appendChild(widgetWrapper);
+}
+
+function initPreview(){
+  preview.elm = document.createElement('section');
+  var html = '<div class="preview-content">' +
+        '<div class="widget-header">' +
+        '<a href="https://vzakupke.com" target="_blank">' +
+        '<div class="logo-wrapper pull-left">' +
+        '<img src="https://vzakupke.com/img/icons/apple-icon.png"/>' +
+        '</div>' +
+        '<div class="title-wrapper pull-left">' +
+        '<strong>ВЗакупке</strong>' +
+        '</div>' +
+        '</a>' +
+        '<div class="cross-btn pull-right" onclick="hidePreview()">' +
+        '&times' +
+        '</div>' +
+        '</div>' +
+        '<div class="main-content">' +
+        '<div class="additional-info-user">' +
+        '<b class="text-vz">С нами вы сможете:</b>' +
+        '<br/>' +
+        '<ul>' +
+        '<li><i class="fa fa-fw fa-vk text-vz"></i>выгрузить каталог в VK;</li>' +
+        '<li><i class="fa fa-fw fa-file-excel-o text-vz"></i>скачать каталог для сайта.</li>' +
+        '</ul>' +
+        '</div>' +
+        '<div class="additional-info-provider">' +
+        '<div class="expiration-info text-vz">Подписка истекает: <b class="expiration"></b></div>' +
+        '<a class="link-vz link-stat" onclick="openStat()"><i class="fa fa-fw fa-bar-chart"></i>Статистика сайта</a>' +
+        '</div>' +
+        '<br/>' +
+        '<a class="link-vz" onclick="openInstruction()"><i class="fa fa-fw fa-question-circle-o"></i>Как это работает?</a>' +
+        '<br/>' +
+        '<br/>' +
+        '<div id="login-button-wrapper" class="login-button-wrapper">' +
+        '<button id="login-button" type="button" class="btn btn-vz" onclick="widgetLogin()">Авторизация</button>' +
+        '</div>' +
+        '<div id="process-buttons" class="btn-group btn-group-justified" role="group">' +
+        '<div class="btn-group" role="group">' +
+        '<button id="crawl-btn" type="button" class="btn btn-vz" onclick="crawl()" title="Получить товары со страницы каталога">' +
+        'Получить <span id="crawl-progress" class="label label-pill"><b><span id="from"></span> из <span id="to"></span></b></span></button>' +
+        '</div>' +
+        '<div class="btn-group" role="group">' +
+        '<button id="upload-btn" type="button" class="btn btn-vz" onclick="openStore()">' +
+        'Выложить <span id="upload-progress" class="label label-pill"><b><span id="from"></span> из <span id="to"></span></b></span></button>' +
+        '</div>' +
+        '</div>' +
+        '<br/>' +
+        '<div class="text-center issues-link-wrapper">' +
+        '<a id="issues-link" class="link-vz" onclick="openIssues()"><i class="fa fa-fw fa-calendar-check-o" aria-hidden="true"></i><span id="task-counter"></span></a>' +
+        '</div>' +
+        '</div>' +
+        '<div class="widget-footer" >' +
+        '<div class="install-link pull-right">' +
+        '<a href="https://vzakupke.com/#/#providers" target="_blank" class="text-muted">установить на свой сайт<i class="fa fa-fw fa-cog"></i></a>' +
+        '</div>' +
+        '<div class="vk-link pull-left">' +
+        '<a href="https://new.vk.com/vzakupkecom" target="_blank"><img border="0" src="https://ci5.googleusercontent.com/proxy/9YUMZP3PZo-cNkU4M2LhOvxLGvol_gkBlcJlMPBzXvM1jlFj1yDip27YJeBzBjBC1svhPbeaKWUu5iLPMh1TBEfYkAyLoe4zhthjt2WkWPmBTONEMmpkVh41=s0-d-e1-ft#https://static.mailerlite.com/images/social-icons/set4/vkontakte.png" alt="Vkontakte" class="CToWUd"></a>' +
+        '</div>' +
+        '</div>' +
+        '<script type="text/javascript">(window.Image ? (new Image()) : document.createElement("img")).src = "https://vk.com/rtrg?p=VK-RTRG-223631-3Ap62";</script>' +
+        '</div>';
+  preview.elm.id = 'vz-widget-preview';
+  preview.elm.style.display = 'none';
+  preview.elm.innerHTML = html;
+  preview.crawlBtn = preview.elm.querySelector('#crawl-btn');
+  preview.uploadBtn = preview.elm.querySelector('#upload-btn');
+  preview.issuesLink = preview.elm.querySelector('#issues-link');
+  preview.taskCounter = preview.elm.querySelector('#task-counter');
+  preview.loginButton = preview.elm.querySelector('#login-button-wrapper');
+  preview.processButtons = preview.elm.querySelector('#process-buttons');
+  preview.providerInfo = preview.elm.querySelector('.additional-info-provider');
+  preview.userInfo = preview.elm.querySelector('.additional-info-user');
+  preview.expiration = preview.providerInfo.querySelector('.expiration');
+  widgetWrapper.appendChild(preview.elm);
+  widgetWrapper.appendChild(preview.elm);
+
+  crawlProgress.elm = document.getElementById('crawl-progress');
+  crawlProgress.from = crawlProgress.elm.querySelector('#from');
+  crawlProgress.to = crawlProgress.elm.querySelector('#to');
+
+  uploadProgress.elm = document.getElementById('upload-progress');
+  uploadProgress.from = uploadProgress.elm.querySelector('#from');
+  uploadProgress.to = uploadProgress.elm.querySelector('#to');
+
+  disableUploadBtn();
+}
+
+function initWidgetObserver(){
+  // create an observer instance
+  var observer = new MutationObserver(function(mutations){
+    mutations.forEach(function(mutation){
+      if (mutation.target.style.display === 'none') mutation.target.style.display = 'block';
+    });
+  });
+
+  // configuration of the observer:
+  var config = { attributes: true, attributeFilter: ['style']};
+
+  // pass in the target node, as well as the observer options
+  observer.observe(widgetWrapper, config);
+  observer.observe(widgetButton, config);
+}
+
+function setupHighestZIndex(){
+  var highestZ = Math.max(findHighestZIndex('div'), findHighestZIndex('iframe'));
+  if (highestZ === highestZIndex) return;
+
+  highestZIndex = highestZ;
+  var wrapperZ = highestZ + 1;
+  var previewZ = highestZ + 5;
+  var btnZ = highestZ + 10;
+  var frameZ = highestZ + 15;
+
+  widgetWrapper.style.zIndex = wrapperZ;
+  widgetButton.style.zIndex = btnZ;
+  preview.elm.style.zIndex = previewZ;
+  frameBackground.style.zIndex = frameZ;
+}
+
+function initToggleAnimationClasses(){
+  if (widgetWrapper.classList.contains('top')){
+    showClass = 'fadeInDown';
+    hideClass = 'fadeOutUp';
+  } else if (widgetWrapper.classList.contains('right') || widgetWrapper.classList.contains('right-top') || widgetWrapper.classList.contains('right-bottom')){
+    showClass = 'fadeInRight';
+    hideClass = 'fadeOutRight';
+  } else if (widgetWrapper.classList.contains('bottom') || widgetWrapper.classList.contains('bottom-left') || widgetWrapper.classList.contains('bottom-right')){
+    showClass = 'fadeInUp';
+    hideClass = 'fadeOutDown';
+  } else if (widgetWrapper.classList.contains('left') || widgetWrapper.classList.contains('left-top') || widgetWrapper.classList.contains('left-bottom')){
+    showClass = 'fadeInLeft';
+    hideClass = 'fadeOutLeft';
+  } else {
+    showClass = 'fadeIn';
+    hideClass = 'fadeOut';
+  }
+}
+
+function _init(){
+  if (vzWidgetIsInitialized) return;
+
+  appendWidgetCss();
+  initWrapper();
+  initBtn();
+  initPreview();
+  initToggleAnimationClasses();
+  initFrame();
+  initWidgetObserver();
+  setTimeout(setupHighestZIndex, 1000);
+  vzWidgetIsInitialized = true;
+}
+
+if (document.readyState == "loading"){
+  document.addEventListener("DOMContentLoaded", _init);
+} else {
+  _init();
+}
+
+// @media (max-width: 576px) {
+// #vz-widget-wrapper {
+//     display: none;
+// }
+// }
