@@ -19,7 +19,7 @@
     width: 36px;
     height: 36px;
     cursor: pointer;
-    background: url(../img/search_dark_blue_bg.svg) center no-repeat;
+    background: url(../img/search_blue_non_bg.png) center no-repeat;
     background-size: cover;    
 }
 
@@ -61,7 +61,7 @@
     width: 36px;
     height: 36px;
     cursor: pointer;
-    background: url(../img/search_dark_blue_bg.svg) center no-repeat;
+    background: url(../img/search_blue_non_bg.png) center no-repeat;
     background-size: cover;
     margin-left: 6px;
 }
